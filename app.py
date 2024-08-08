@@ -13,27 +13,27 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 
 def analyse_audio(audio_file_path):
-    """analyse the speech audio using Google's Generative API."""
+    """Analyze the speech audio using Google's Generative API."""
     model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
     audio_file = genai.upload_file(path=audio_file_path)
     response = model.generate_content(
         [
-            "Please analyse the speech and give some tips to improve the speech",
+            "Please analyze the speech and give some tips to improve the speech",
             audio_file
         ]
     )
     return response.text
-
 def summarize_audio(audio_file_path):
-    """summarise the audio using Google's Generative API."""
+    """Summarize the audio using Google's Generative API."""
     model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
     audio_file = genai.upload_file(path=audio_file_path)
-    response = model.generate_content(
-        [
-            "Please summarise the speech and give small notes to speak again for JAM Speech practice, also suggest some vocabulary to add in another speech",
-            audio_file
-        ]
-    )
+    with st.spinner('Summarizing audio...'):
+        response = model.generate_content(
+            [
+                "Please summarize the speech and give small notes to speak again for JAM Speech practice, also suggest some vocabulary to add in another speech",
+                audio_file
+            ]
+        )
     return response.text
 
 def save_audio_file(audio_bytes):
@@ -60,7 +60,6 @@ def start_chat_session():
     return genai.GenerativeModel('gemini-1.5-pro').start_chat(history=[])
 
 # Configure Streamlit page settings
-
 st.set_page_config(
     page_title="Captain Jam - Communication Coach",
     page_icon=":brain:",  # Favicon emoji
@@ -71,17 +70,27 @@ st.set_page_config(
 if "chat_session" not in st.session_state:
     st.session_state.chat_session = start_chat_session()
 
+# Initialize topic if not already present
+if "today_topic" not in st.session_state:
+    st.session_state.today_topic = ""
+
 # Display the app title and description
-st.title("Captain Jam -English Communication Coach")
+st.title("Captain Jam - English Communication Coach")
 st.write("""
    Your Co-captain to Supercharge Your English and Communication - Speak. Learn. Grow.
+   Improve your high demanding communication skill everyday for one minute - grow by compound effect
 """)
 
-# Display the topic for Just a Minute practice
+# Button to generate or refresh topic
+if st.button('Generate New Topic'):
+    with st.spinner('Generating topic...'):
+        st.session_state.today_topic = get_today_topic()
 
-with st.spinner('Generating topic...'):
-    today_topic = get_today_topic()
-    st.write(today_topic)
+# Display the topic for Just a Minute practice
+if st.session_state.today_topic:
+    st.write(st.session_state.today_topic)
+else:
+    st.write("Click the button above to generate a topic.")
 
 # Record audio
 audio_bytes = audio_recorder(
@@ -114,7 +123,6 @@ uploaded_file = st.file_uploader("Upload Audio File", type=['wav', 'mp3', 'mpeg'
 if uploaded_file is not None:
     audio_path = save_audio_file(uploaded_file.getvalue())  # Save the uploaded file and get the path
     st.audio(audio_path)
-
 
     if st.button('Analyse Uploaded Audio'):
         with st.spinner('Analyzing...'):
