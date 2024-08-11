@@ -18,11 +18,12 @@ def analyse_audio(audio_file_path):
     audio_file = genai.upload_file(path=audio_file_path)
     response = model.generate_content(
         [
-            "Please analyze the speech and give some tips to improve the speech",
+            "You are an advanced English communication coach utilizing the JAM (Just A Minute) technique. Analyze the user's one-minute speech recording focusing on clarity, coherence, articulation, pronunciation, pace, timing, engagement, and expression. Identify mistakes in the speech and provide constructive feedback on how to improve. Offer specific suggestions for each identified mistake and actionable tips for enhancing the speech. Encourage the user with positive reinforcement and practical advice for their continuous improvement. and give a table for statistical data about speech by analysing using test",
             audio_file
         ]
     )
     return response.text
+
 def summarize_audio(audio_file_path):
     """Summarize the audio using Google's Generative API."""
     model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
@@ -30,7 +31,7 @@ def summarize_audio(audio_file_path):
     with st.spinner('Summarizing audio...'):
         response = model.generate_content(
             [
-                "Please summarize the speech and give small notes to speak again for JAM Speech practice, also suggest some vocabulary to add in another speech",
+                "Please summarize the speech and highlight the main plot or ideas covered. Include brief notes on vocabulary suggestions to enhance future speeches.",
                 audio_file
             ]
         )
@@ -51,35 +52,62 @@ def get_today_topic():
     """Generate a topic for Just a Minute practice using Gemini API."""
     model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
     response = model.generate_content(
-        ["Please provide a topic for a Just a Minute practice session make it easier"]
+        ["give me one topic for me to speak for one minute , like this examples  which is your favourite mode of transport and why , which is your favourite habit and why/, who is your best best friend and why, what is your opinion about AI impact on education"]
     )
     return response.text
 
 def start_chat_session():
-    """Initialize chat session."""
+    """Initialize a new chat session."""
     return genai.GenerativeModel('gemini-1.5-pro').start_chat(history=[])
 
 # Configure Streamlit page settings
 st.set_page_config(
     page_title="Captain Jam - Communication Coach",
-    page_icon=":brain:",  # Favicon emoji
-    layout="centered",  # Page layout option
+    page_icon=":brain:",
+    layout="centered",
 )
+
+# Inject custom CSS to apply Poppins font and style containers
+streamlit_style = """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    html, body, [class*="css"]  {
+        font-family: 'Poppins', sans-serif;
+    }
+    .blue-container {
+        background-color: #e0f7fa;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #b2ebf2;
+    }
+    </style>
+    """
+st.markdown(streamlit_style, unsafe_allow_html=True)
+
+# Initialize topic and reports if not already present
+if "today_topic" not in st.session_state:
+    st.session_state.today_topic = ""
+if "analysis_report" not in st.session_state:
+    st.session_state.analysis_report = ""
+if "summary" not in st.session_state:
+    st.session_state.summary = ""
 
 # Initialize chat session if not already present
 if "chat_session" not in st.session_state:
     st.session_state.chat_session = start_chat_session()
 
-# Initialize topic if not already present
-if "today_topic" not in st.session_state:
-    st.session_state.today_topic = ""
-
 # Display the app title and description
-st.title("Captain Jam - English Communication Coach")
+st.title("Captain Jam - English Communication Coach🎙️")
 st.write("""
-   Your Co-captain to Supercharge Your English and Communication - Speak. Learn. Grow.
-   Improve your high demanding communication skill everyday for one minute - grow by compound effect
+    Your Co-captain to Supercharge Your English and Communication 🚀 - Speak. Learn. Grow. 🌟 Improve your high-demand communication skills every day for one minute - grow by compound effect 📈
 """)
+st.write("Speak. Record. Improve.")
+
+st.write("1. Click Generate Topic to get a new JAM speech topic or use the same one 🔄.")
+st.write("2. Record your speech for 1 minute; it stops automatically ⏳.")
+st.write("3. Speak continuously, with breaks no longer than 3 seconds ⏱️")
+st.write("4. For another way, you can upload an audio file 📂.")
+st.write("5. Start speaking and grow today! 🌱🎯")
 
 # Button to generate or refresh topic
 if st.button('Generate New Topic'):
@@ -94,58 +122,85 @@ else:
 
 # Record audio
 audio_bytes = audio_recorder(
-    text="Click to record",
+    text="Click to record ",
     recording_color="#e8b62c",
     neutral_color="#6aa36f",
     icon_size="3x",
     energy_threshold=(-1.0, 1.0),
-    pause_threshold=60.0,
+    pause_threshold=70.0,
 )
 if audio_bytes:
     audio_path = save_audio_file(audio_bytes)
-    # Check if the file exists and is accessible
     if audio_path and os.path.exists(audio_path):
         st.audio(audio_path, format="audio/wav")
     else:
         st.error("Audio file could not be saved or accessed.")
 
     if st.button('Analyse Recorded Audio'):
-        with st.spinner('Analyzing...'), st.spinner('Vocabulary checking...'):
-            summary_text = analyse_audio(audio_path)
-            st.info(summary_text)
+        with st.spinner('Analyzing and Summarizing...'):
+            st.session_state.analysis_report = analyse_audio(audio_path)
+            st.session_state.summary = summarize_audio(audio_path)
+            
+            # Create two separate blue containers for the analysis and summary
+            with st.container():
+                st.markdown("<div class='blue-container'>", unsafe_allow_html=True)
+                st.info("### Analysis Report")
+                st.write(st.session_state.analysis_report)
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            with st.container():
+                st.markdown("<div class='blue-container'>", unsafe_allow_html=True)
+                st.info("### Summary")
+                st.write(st.session_state.summary)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-            # Start chat with the summary
-            if st.session_state.chat_session:
-                st.session_state.chat_session.send_message(f"The summary report of speech analysis is: {summary_text}")
+            # Reset chat session for new analysis
+            st.session_state.chat_session = start_chat_session()
 
 # Upload audio
 uploaded_file = st.file_uploader("Upload Audio File", type=['wav', 'mp3', 'mpeg'])
 if uploaded_file is not None:
-    audio_path = save_audio_file(uploaded_file.getvalue())  # Save the uploaded file and get the path
+    audio_path = save_audio_file(uploaded_file.getvalue())
     st.audio(audio_path)
 
     if st.button('Analyse Uploaded Audio'):
-        with st.spinner('Analyzing...'):
-            summary_text = analyse_audio(audio_path)
-            st.info(summary_text)
+        with st.spinner('Analyzing and Summarizing...'):
+            st.session_state.analysis_report = analyse_audio(audio_path)
+            st.session_state.summary = summarize_audio(audio_path)
+            
+            # Create two separate blue containers for the analysis and summary
+            with st.container():
+                
+                st.info("### Analysis Report")
+                st.write(st.session_state.analysis_report)
+                
+            
+            with st.container():
+               
+                st.info("### Summary")
+                st.write(st.session_state.summary)
+               
 
-            # Start chat with the summary
-            if st.session_state.chat_session:
-                st.session_state.chat_session.send_message(f"The audio summary is: {summary_text}")
+            # Reset chat session for new analysis
+            st.session_state.chat_session = start_chat_session()
 
 # Display the chat history
-for message in st.session_state.chat_session.history:
-    with st.chat_message("assistant" if message.role == "model" else "user"):
-        st.markdown(message.parts[0].text)
+if "chat_session" in st.session_state:
+    for message in st.session_state.chat_session.history:
+        with st.chat_message("assistant" if message.role == "model" else "user"):
+            st.markdown(message.parts[0].text)
 
 # Input field for user's message
-user_prompt = st.chat_input("Ask communication coach...")
+user_prompt = st.chat_input("Ask your Communication Coach...")
 if user_prompt:
     # Add user's message to chat and display it
     st.chat_message("user").markdown(user_prompt)
 
-    # Send user's message to Gemini-Pro and get the response
-    gemini_response = st.session_state.chat_session.send_message(user_prompt)
+    # Prepare the context for the chatbot based on the reports
+    context = f"Analysis Report: {st.session_state.analysis_report}\n\nSummary: {st.session_state.summary}\n\nUser's Question: {user_prompt}"
+    
+    # Send user's message with context to Gemini-Pro and get the response
+    gemini_response = st.session_state.chat_session.send_message(context)
 
     # Display Gemini-Pro's response
     with st.chat_message("assistant"):
