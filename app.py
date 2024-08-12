@@ -91,17 +91,20 @@ if "chat_session" not in st.session_state:
     st.session_state.chat_session = start_chat_session()
 
 # Display the app title and description
-st.title("Captain Jam - English Communication Coach🎙️")
+st.title("Captain Jam AI - English Communication Coach🎙️")
 st.write("""
     Your Co-captain to Supercharge Your English and Communication 🚀 - Speak. Learn. Grow. 🌟 Improve your high-demand communication skills every day for one minute - grow by compound effect 📈
 """)
-st.write("Speak. Record. Improve.")
+st.write('Speak Wrong, Grow Long 📣🌱')
 
-st.write("1. Click Generate Topic to get a new JAM speech topic or use the same one 🔄.")
-st.write("2. Record your speech for 1 minute; it stops automatically ⏳.")
-st.write("3. Speak continuously, with breaks no longer than 3 seconds ⏱️")
-st.write("4. For another way, you can upload an audio file 📂.")
-st.write("5. Start speaking and grow today! 🌱🎯")
+# Expandable instructions
+with st.expander("How to Use 📚"):
+    
+    st.write("1. Click Generate Topic to get a new JAM speech topic or use the same one 🔄.")
+    st.write("2. Record your speech for 1 minute; it stops automatically ⏳.")
+    st.write("3. Speak continuously, with breaks no longer than 3 seconds ⏱️")
+    st.write("4. For another way, you can upload an audio file 📂.")
+    st.write("5. Start speaking and grow today! 🌱🎯")
 
 # Button to generate or refresh topic
 if st.button('Generate New Topic'):
@@ -131,7 +134,8 @@ if audio_bytes:
         st.error("Audio file could not be saved or accessed.")
 
     if st.button('Analyse Recorded Audio'):
-        with st.spinner('Analyzing and Summarizing...'):
+        with st.spinner('Analyzing...'), st.spinner('Clarity and Coherence Test'),st.spinner('Articulation and Pronunciation Test'),st.spinner('Pace and Timing Test'),st.spinner('Engagement and Expression Test'):
+
             st.session_state.analysis_report = analyse_audio(audio_path)
             st.session_state.summary = summarize_audio(audio_path)
             
@@ -153,7 +157,7 @@ if uploaded_file is not None:
     st.audio(audio_path)
 
     if st.button('Analyse Uploaded Audio'):
-        with st.spinner('Analyzing and Summarizing...'):
+        with  st.spinner('Analyzing...'), st.spinner('Clarity and Coherence Test'),st.spinner('Articulation and Pronunciation Test'),st.spinner('Pace and Timing Test'),st.spinner('Engagement and Expression Test'):
             st.session_state.analysis_report = analyse_audio(audio_path)
             st.session_state.summary = summarize_audio(audio_path)
             
