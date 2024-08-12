@@ -74,12 +74,6 @@ streamlit_style = """
     html, body, [class*="css"]  {
         font-family: 'Poppins', sans-serif;
     }
-    .blue-container {
-        background-color: #e0f7fa;
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px solid #b2ebf2;
-    }
     </style>
     """
 st.markdown(streamlit_style, unsafe_allow_html=True)
@@ -141,18 +135,13 @@ if audio_bytes:
             st.session_state.analysis_report = analyse_audio(audio_path)
             st.session_state.summary = summarize_audio(audio_path)
             
-            # Create two separate blue containers for the analysis and summary
-            with st.container():
-                st.markdown("<div class='blue-container'>", unsafe_allow_html=True)
-                st.info("### Analysis Report")
-                st.write(st.session_state.analysis_report)
-                st.markdown("</div>", unsafe_allow_html=True)
+            # Show the analysis report
+            st.info("### Analysis Report")
+            st.write(st.session_state.analysis_report)
             
-            with st.container():
-                st.markdown("<div class='blue-container'>", unsafe_allow_html=True)
-                st.info("### Summary")
-                st.write(st.session_state.summary)
-                st.markdown("</div>", unsafe_allow_html=True)
+            # Show the summary
+            st.info("### Summary")
+            st.write(st.session_state.summary)
 
             # Reset chat session for new analysis
             st.session_state.chat_session = start_chat_session()
@@ -168,18 +157,13 @@ if uploaded_file is not None:
             st.session_state.analysis_report = analyse_audio(audio_path)
             st.session_state.summary = summarize_audio(audio_path)
             
-            # Create two separate blue containers for the analysis and summary
-            with st.container():
-                
-                st.info("### Analysis Report")
-                st.write(st.session_state.analysis_report)
-                
+            # Show the analysis report
+            st.info("### Analysis Report")
+            st.write(st.session_state.analysis_report)
             
-            with st.container():
-               
-                st.info("### Summary")
-                st.write(st.session_state.summary)
-               
+            # Show the summary
+            st.info("### Summary")
+            st.write(st.session_state.summary)
 
             # Reset chat session for new analysis
             st.session_state.chat_session = start_chat_session()
